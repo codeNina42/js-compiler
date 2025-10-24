@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro Blue JavaScript Terminal</title>
+<style>
+  :root {
+    --bg: #001122;
+    --panel: #002244;
+    --text: #00ccff;
+    --accent: #33ffff;
+    --font: "Courier New", monospace;
+  }
+  html, body {
+    height: 100%; margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(180deg, #002244, #001122);
+    color: var(--accent);
+    font-weight: bold;
+    border: 2px solid #004466;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+  }
+  h1 { font-size: 18px; margin: 0; color: var(--accent); }
+  .cols { display: flex; gap: 12px; flex: 1; }
+  .box {
+    flex: 1;
+    background: linear-gradient(0deg, #001122, #002244);
+    border: 2px solid #004466;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  textarea {
+    flex: 1;
+    background: #000;
+    color: var(--text);
+    border: 1px dashed #004477;
+    padding: 10px;
+    font-family: var(--font);
+    font-size: 14px;
+    resize: none;
+  }
+  button {
+    background: #002244;
+    border: 2px solid #004466;
+    color: var(--text);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px 12px;
+    margin-top: 8px;
+    border-radius: 4px;
+  }
+  button:hover { background: #003355; }
+  .output {
+    flex: 1;
+    background: #000;
+    border: 1px solid #003355;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 14px;
+  }
+  input.user-input {
+    background: #001133;
+    color: var(--accent);
+    border: 1px solid #004477;
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 3px 6px;
+    width: 80%;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">JS</div>
+      <h1>Retro Blue JavaScript Terminal</h1>
+    </header>
+
+    <div class="cols">
+      <div class="box">
+        <label>JavaScript Code</label>
+        <textarea id="code" spellcheck="false">
+// Simple calculator
+console.log("=== Retro Blue Calculator ===");
+
+let name = await input("Enter your name: ");
+console.log("Welcome, " + name + "! Let's do some math.\n");
+
+let num1 = await input("Enter first number: ");
+let num2 = await input("Enter second number: ");
+let op = await input("Choose operation (+, -, *, /): ");
+
+num1 = parseFloat(num1);
+num2 = parseFloat(num2);
+
+let result;
+if (op === "+") result = num1 + num2;
+else if (op === "-") result = num1 - num2;
+else if (op === "*") result = num1 * num2;
+else if (op === "/") result = num2 !== 0 ? num1 / num2 : "Error: Divide by zero";
+else result = "Invalid operation";
+
+console.log("\\nResult: " + result);
+console.log("\\nThanks for using Retro Calculator!");
+        </textarea>
+        <button id="runBtn">Run (F9)</button>
+      </div>
+
+      <div class="box">
+        <label>Terminal Output</label>
+        <div id="output" class="output"><pre>// Output will appear here</pre></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const out = document.getElementById('output');
+const runBtn = document.getElementById('runBtn');
+const codeEl = document.getElementById('code');
+
+function printToTerminal(text) {
+  const pre = document.createElement('pre');
+  pre.textContent = text;
+  out.appendChild(pre);
+  out.scrollTop = out.scrollHeight;
+}
+
+// --- async input handler ---
+async function input(promptText) {
+  printToTerminal(promptText);
+  return new Promise((resolve) => {
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.className = 'user-input';
+    out.appendChild(inputField);
+    inputField.focus();
+    inputField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = inputField.value;
+        const echo = document.createElement('pre');
+        echo.textContent = "> " + val;
+        out.replaceChild(echo, inputField);
+        resolve(val);
+      }
+    });
+  });
+}
+
+// --- run button logic ---
+runBtn.addEventListener('click', async () => {
+  out.innerHTML = ''; // clear
+  try {
+    const code = codeEl.value;
+    const asyncCode = `(async () => { ${code} })()`;
+    const consoleLog = console.log;
+    console.log = (...args) => {
+      printToTerminal(args.join(' '));
+      consoleLog.apply(console, args);
+    };
+    await eval(asyncCode);
+    console.log = consoleLog;
+  } catch (e) {
+    printToTerminal("Error: " + e.message);
+  }
+});
+
+// Run with F9 key
+window.addEventListener('keydown', (e)=>{
+  if (e.key === 'F9') { e.preventDefault(); runBtn.click(); }
+});
+</script>
+</body>
+</html>
